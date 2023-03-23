@@ -1,0 +1,53 @@
+
+# Only use to test the performance of specified checkpoints.
+# python main.py --config_file /sdc/wwc/mcnc-main/code/configs/test_bart.yaml
+
+
+
+pred_order: False  # new add 
+resume: False
+checkpoint : '' # TODO
+gpuid: '2'
+
+
+
+encode_max_length: 50
+decode_max_length: 50
+eval_decode_max_length: 50
+truncation: True
+model_type: 'bart_mask_random'
+pretrained_model_path: '../init/init_model/bart-base'
+data_dir: '../data/negg_data'
+annotation: 'bart_base_contrastive_fine-tuning'
+use_gpu: True
+multi_gpu: False
+pro_type : 'sqrt'
+gpu_num: 1
+train: False
+eval: True  # set eval = True to run best_checkpoint on test dataset.
+test: False
+filemode: 'w'
+patience : 5
+num_train_epochs: 100
+max_train_steps: 0
+per_gpu_train_batch_size: 64
+gradient_accumulation_steps: 1
+eval_batch_size: 64
+log_step: 10
+margin: 0.5
+noise_lambda: 0
+denominator_correction_factor : 0
+pretrain: False
+random_span: False
+softmax: True
+lr_scheduler_type: 'constant' # constant cosine
+loss_fct: 'ComplementEntropy' # CrossEntropyLoss MarginRankingLoss 
+beta : 1
+fp16: False
+lr: 5.0e-5
+weight_decay: 1.0e-6  # 1.0e-6 #1e-2
+epsilon: 1.0e-8
+vocab_size: 50265
+seed: 2022
+
+dynamic_weight: True # new add 

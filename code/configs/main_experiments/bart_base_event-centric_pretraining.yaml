@@ -1,0 +1,44 @@
+encode_max_length: 100
+decode_max_length: 50
+eval_decode_max_length : 30
+truncation: True
+model_type: 'bart_mask_random'
+pretrained_model_path: '../init/init_model/bart-base'
+data_dir: '../data/negg_data'
+annotation: 'bart_base_event-centric_pretraining'
+checkpoint : ''
+resume: False
+use_gpu: True
+multi_gpu: False
+pro_type : 'sqrt'
+gpuid: '1'
+gpu_num: 1
+train: True
+eval: False
+test: True
+filemode: 'w'
+patience : 50
+num_train_epochs: 50
+max_train_steps: 0
+per_gpu_train_batch_size: 64 # set to 256 originally.
+gradient_accumulation_steps: 1
+eval_batch_size: 128
+log_step: 10
+margin: 0.4
+noise_lambda: 0
+pretrain: True #event-centric set to True, contrastive_fine-tuning set to False.
+random_span: False
+mask_num : 3
+denominator_correction_factor : 0
+softmax: True
+lr_scheduler_type: 'constant' # constant cosine
+loss_fct: 'ComplementEntropy' # CrossEntropyLoss MarginRankingLoss ComplementEntropy
+fp16: False
+lr: 1.0e-5
+weight_decay: 1.0e-6 
+epsilon: 1.0e-8 
+vocab_size: 50265
+seed: 2022
+
+dynamic_weight: True # new add 
+pred_order: False # new add 

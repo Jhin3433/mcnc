@@ -1,0 +1,49 @@
+pred_order: True # new add 
+pretrain: False #event-centric set to True, contrastive_fine-tuning set to False.
+encode_max_length: 100
+decode_max_length: 50
+eval_decode_max_length: 50
+lr: 1.0e-6
+
+# checkpoint : "/sdc/wwc/mcnc-main/cache/checkpoints/03-20/2023-03-20_17:02:33_all loss and logits, pre_train==True, modify max_length_to_50., lr:1.0-5, the input is nine shuffled events, the output is ordered events./best_checkpoint.pt" # event-centric set to True, contrastive_fine-tuning set to False.
+checkpoint : "" # event-centric set to True, contrastive_fine-tuning set to False.
+resume: False # event-centric set to True, contrastive_fine-tuning set to False.
+annotation: 'all loss and logits, pre_train==False, modify max_length_to_50., lr:1.0-6, gradient_accumulation_steps:8'
+gpuid: '1,2'
+multi_gpu: True
+train: True
+eval: False # test
+test: True
+num_train_epochs: 100
+per_gpu_train_batch_size: 16 #event-centric set to 128, contrastive_fine-tuning set to 32.
+gradient_accumulation_steps: 8
+
+
+mask_num: 3
+truncation: True
+model_type: 'bart_mask_random'
+pretrained_model_path: '../init/init_model/bart-base'
+data_dir: '../data/negg_data'
+use_gpu: True
+pro_type : 'sqrt'
+gpu_num: 1
+filemode: 'w'
+patience : 5
+max_train_steps: 0
+eval_batch_size: 64
+log_step: 10
+margin: 0.5
+noise_lambda: 0
+denominator_correction_factor : 0
+random_span: False
+softmax: True
+lr_scheduler_type: 'constant' # constant cosine
+loss_fct: 'ComplementEntropy' # CrossEntropyLoss MarginRankingLoss 
+beta : 1
+fp16: False
+weight_decay: 1.0e-6  # 1.0e-6 #1e-2
+epsilon: 1.0e-8
+# vocab_size: 50265
+seed: 970106
+dynamic_weight: False # new add 
+local_rank: -1
