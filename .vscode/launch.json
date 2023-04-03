@@ -1,0 +1,41 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            // "program": "/sdc/wwc/mcnc-main/code/main.py",
+            "console": "integratedTerminal",
+            "cwd": "${fileDirname}",
+            "justMyCode": false,
+            // "./configs/pred_order_bart.yaml"
+            // "./configs/main_experiments/bart_base_contrastive_fine-tuning.yaml"
+            // "args": ["--config_file", "./configs/pred_order_bart.yaml", // "main_experiments/bart_base_event-centric_pretraining.yaml" "bart_base_contrastive_fine-tuning.yaml" 
+            //         "--debug",]
+        }
+
+        // distributed training
+        // {
+        //     "name": "Python: Current File",
+        //     "type": "python",
+        //     "request": "launch",
+        //     "program": "/sdc/wwc/miniconda3/envs/SimCSE/lib/python3.8/site-packages/torch/distributed/launch.py",
+        //     // "program": "/sdc/wwc/mcnc-main/code/main.py",
+        //     "console": "integratedTerminal",
+        //     "cwd": "${fileDirname}",
+        //     "justMyCode": false,
+        //     // "./configs/pred_order_bart.yaml"
+        //     // "./configs/main_experiments/bart_base_contrastive_fine-tuning.yaml"
+        //     "args": ["main.py", // "--config_file", "./configs/pred_order_bart.yaml", // "main_experiments/bart_base_event-centric_pretraining.yaml" "bart_base_contrastive_fine-tuning.yaml" 
+        //             //"--debug",
+        // ]
+        // }
+
+
+    ]
+}

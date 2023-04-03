@@ -29,62 +29,7 @@ class bart_dataset(Dataset):
     def __len__(self):
         return len(self.raw_data)
     
-    ## tag 1: pred the digital position
-    # def __getitem__(self, index):
-    #     if self.state == 'train' or self.state == 'eval':
-    #         if len(self.raw_data[index]) == 3:
-    #             context, answers, targets = self.raw_data[index]
 
-
-    #         context_event_list = [] # list of 8 context events 
-    #         for event in context:
-    #             event_repr = self.event2str(event)
-    #             context_event_list.append(event_repr[1:])
-    #         ending_event_list = [] # list of 5 ending events
-    #         ending_position = [] # the postition of right ending is set to 8, otherwise 20.
-    #         for index, answer in enumerate(answers):
-    #             if index == targets:
-    #                 ending_position.append(8)
-    #             else:
-    #                 ending_position.append(20)
-    #             event_repr = self.event2str(answer)
-    #             ending_event_list.append(event_repr[1:])
-               
-
-    #         all_events = context_event_list + ending_event_list # list of 8 + 5 events 
-    #         events_raw_position = [i for i in range(len(context_event_list))] + ending_position # the order of 8 + 5 events 
-    #         cc = list(zip(all_events, events_raw_position)) # Ref : https://blog.csdn.net/yideqianfenzhiyi/article/details/79197570
-    #         random.shuffle(cc)
-    #         events_shuffle_position = []
-    #         all_events[:], events_shuffle_position[:] = zip(*cc)
-
-
-
-    #         encode_input_tokenized = self.tokenizer(" <sep> ".join(all_events),
-    #                     add_special_tokens=True,
-    #                     return_token_type_ids=False,
-    #                     padding="max_length",
-    #                     truncation=True,
-    #                     max_length=self.args.encode_max_length)
-    
-
-
-    #         decode_input_tokenized = self.tokenizer(" ".join([str(x) for x in events_shuffle_position]),
-    #                     add_special_tokens=True,
-    #                     return_token_type_ids=False,
-    #                     padding="max_length",
-    #                     truncation=True,
-    #                     max_length=self.args.decode_max_length)
-
-
-    #         encode_inputs = encode_input_tokenized['input_ids']
-    #         encode_masks = encode_input_tokenized['attention_mask']
-    #         decode_inputs = decode_input_tokenized['input_ids']
-    #         decode_masks = decode_input_tokenized['attention_mask']
-    #         example = [encode_inputs,encode_masks,decode_inputs,decode_masks,events_shuffle_position]
-    #         example = [torch.tensor(t,dtype=torch.int32) for t in example]
-    #         return example
-        
     def __getitem__(self, index):
         if self.state == 'train' and self.args.pretrain: 
             # --------------------------------------------- format of pre_order ---------------------------------------------
@@ -150,8 +95,6 @@ class bart_dataset(Dataset):
             example = [torch.tensor(t,dtype=torch.int32) for t in example]
             # --------------------------------------------- format of pre_order ---------------------------------------------
 
-            # for i in range(6):
-            #     examples[i] = torch.tensor(examples[i], dtype=torch.int32) # add the num of shuffle sequences.
     
 
     
@@ -215,7 +158,13 @@ class bart_dataset(Dataset):
          
             # --------------------------------------------- format of orginial event-centric ---------------------------------------------
             return example, example_original
-            # return examples # add the num of shuffle sequences.
+
+
+
+
+
+
+
 
         else: #contrastive fine-tuning
 

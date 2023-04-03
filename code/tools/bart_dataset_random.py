@@ -121,9 +121,15 @@ class bart_dataset(Dataset):
                     encode_input += '<mask> . '
                 else:
                     encode_input+=  raw_event_list[i] + ' . '
+
+
             decode_input = '. '
-            for i in mask_indexs:
-                decode_input += raw_event_list[i] + ' . '
+            # decode恢复所有的
+            for i in range(9):
+                decode_input +=  raw_event_list[i] + ' . '
+            # # decode恢复mask掉的
+            # for i in mask_indexs:
+            #     decode_input += raw_event_list[i] + ' . '
             decode_input = decode_input[:-1]
 
             
@@ -185,8 +191,16 @@ class bart_dataset(Dataset):
             # --------------- --------------- --------------- --------------- --------------- #
 
 
+            
+
+
             for answer in answers:
-                decode_input = '. ' + self.event2str(answer)[1:] + ' .'
+                ## decode恢复所有的
+                decode_input = '. ' + encode_input.strip('<mask> . ') + ". " + self.event2str(answer)[1:] + ' .'
+
+                # ## decode恢复mask掉的
+                # decode_input = '. ' + self.event2str(answer)[1:] + ' .'
+
                 if decode_input == '. city categorize links .':
                     decode_input = '. city city city .'
                 # decode_input = self.event2str(answer)[1:]

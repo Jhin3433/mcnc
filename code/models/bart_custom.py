@@ -297,6 +297,9 @@ class bart_mask_random(nn.Module):
             _, original_logits, _ = self.evaluate_stage(original_inputs, flag="original")
             _, pre_order_logits, _ = self.evaluate_stage(pre_order_inputs, flag="pre_order")
 
-            all_logits = pre_order_logits + original_logits
+            # all_logits = pre_order_logits + original_logits
             # all_logits = original_logits
+            all_logits = pre_order_logits
             return None, all_logits, None
+
+

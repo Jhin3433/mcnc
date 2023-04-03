@@ -1,4 +1,4 @@
-import random
+
 import numpy as np
 import torch
 import yaml
@@ -49,14 +49,4 @@ class Args():
             mstr += k +': '+str(v)+'\n'
         return mstr
 
-def seed_everything(seed=2021):
-    random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    # some cudnn methods can be random even after fixing the seed
-    # unless you tell it to be deterministic
-    torch.backends.cudnn.benchmark = False
-    torch.backends.cudnn.deterministic = True
+
