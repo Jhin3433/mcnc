@@ -40,7 +40,7 @@ def class_acc(preds, labels):
     acc = correct.sum().item() / len(correct)
 
 
-    # results annalysis 
+    # # results annalysis 
     # global all_pred_labels
     # global all_ground_labels
     # global all_pred_logits
@@ -61,13 +61,15 @@ def train(args,train_dataloader,model,optimizer,lr_scheduler,writer,logger=None,
     model.zero_grad()
     for step, return_batch in enumerate(train_dataloader):
         model.train()
-        if len(return_batch) == 2: 
-            (batch,batch_original) = return_batch
+        if len(return_batch) == 3: 
+            (batch,batch_original,batch_noraml) = return_batch
             batch = [t.long() for t in batch]
             batch = tuple(t.to(args.device) for t in batch)
             batch_original = [t.long() for t in batch_original]
-            batch_original = tuple(t.to(args.device) for t in batch_original)    
-            output = model(batch, batch_original)
+            batch_original = tuple(t.to(args.device) for t in batch_original)
+            batch_noraml = [t.long() for t in batch_noraml]
+            batch_noraml = tuple(t.to(args.device) for t in batch_noraml)   
+            output = model(batch, batch_original, batch_noraml)
         else: # remain the original code.
             batch_original = return_batch
             batch_original = [t.long() for t in batch_original]
@@ -127,13 +129,15 @@ def evaluate(test_dataloader,model,args,logger):
     with torch.no_grad():
         # for step, return_batch in enumerate(test_dataloader):
         for return_batch in tqdm(test_dataloader,total=len(test_dataloader)):
-            if len(return_batch) == 2:
-                batch, batch_original = return_batch
+            if len(return_batch) == 3:
+                batch, batch_original, batch_normal = return_batch
                 batch = [t.long() for t in batch]
                 batch = tuple(t.to(args.device) for t in batch)
                 batch_original = [t.long() for t in batch_original]
-                batch_original = tuple(t.to(args.device) for t in batch_original)    
-                loss, logits, labels = model(batch, batch_original)
+                batch_original = tuple(t.to(args.device) for t in batch_original)
+                batch_normal = [t.long() for t in batch_normal]
+                batch_normal = tuple(t.to(args.device) for t in batch_normal)
+                loss, logits, labels = model(batch, batch_original, batch_normal)
             else:
                 batch_original = return_batch
                 batch_original = tuple(t.to(args.device) for t in batch_original)
@@ -161,7 +165,7 @@ if __name__ == '__main__':
     start_date = date.today().strftime('%m-%d')
     running_time = time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())
     # pre-ready
-    args = init_args(mode = "train")
+    args = init_args(mode = "train") # eval
     logger = init_logger(args, start_date, running_time)
     args.device, args.local_rank = init_device(args)
     if args.local_rank in [-1,0]:
@@ -173,12 +177,19 @@ if __name__ == '__main__':
     
 
     if args.pred_order:
-        from tools.bart_dataset_custom import bart_dataset
-        from models.bart_custom import bart_mask_random
+        from tools.position_bart_dataset import bart_dataset
+        from models.position_bart import bart_mask_random
         MODEL_CLASSES = {
             'bart_1cls': bart_1cls,
             'bart_mask_random' : bart_mask_random,
         }
+        # # 改变数据集输入形式
+        # from tools.bart_dataset_custom import bart_dataset
+        # from models.bart_custom import bart_mask_random
+        # MODEL_CLASSES = {
+        #     'bart_1cls': bart_1cls,
+        #     'bart_mask_random' : bart_mask_random,
+        # }
     else:
         from tools.bart_dataset_random import bart_dataset
         from models.bart_mask_random import bart_mask_random
@@ -290,7 +301,10 @@ if __name__ == '__main__':
                 logger.info('local_rank={},epoch={}'.format(args.local_rank, epoch))
             train_dataset = bart_dataset(train_raw_data,args,'train')
             train_sampler = RandomSampler(train_dataset) if args.local_rank == -1 else DistributedSampler(train_dataset)
-            train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.per_gpu_train_batch_size,num_workers=8)
+            if args.debug: # set num_workers to 1 when I'm debuging.
+                train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.per_gpu_train_batch_size,num_workers=1)
+            else:
+                train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.per_gpu_train_batch_size,num_workers=8)
             torch.cuda.empty_cache()
             torch.distributed.barrier()
             train_loss, train_acc, global_step = train(args, train_dataloader,model,optimizer,lr_scheduler,writer,logger,global_step)
@@ -339,9 +353,9 @@ if __name__ == '__main__':
 
 
 
-    torch.distributed.barrier()
+    # torch.distributed.barrier()
 
 
-if __name__=='__main__':
-    main()
+# if __name__=='__main__':
+#     main()
 

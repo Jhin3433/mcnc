@@ -29,6 +29,19 @@ class bart_dataset(Dataset):
     def __len__(self):
         return len(self.raw_data)
     
+    def text_span(self, input_ids):
+        text_spans = []
+        start = 1
+        for index, input_id in enumerate(input_ids):
+            if input_id == 0:
+                continue
+            if input_id == 2:
+                text_spans.append([start, index - 1])
+                break
+            if input_id == 4:
+                text_spans.append([start, index - 1])
+                start = index + 1
+        return text_spans   
 
     def __getitem__(self, index):
         if self.state == 'train' and self.args.pretrain: 
@@ -85,12 +98,7 @@ class bart_dataset(Dataset):
             decode_masks = decode_input_tokenized['attention_mask']
             labels = copy.deepcopy(decode_inputs)
 
-            # examples[0].append(encode_inputs) # add the num of shuffle sequences.
-            # examples[1].append(encode_masks) # add the num of shuffle sequences.
-            # examples[2].append(decode_inputs) # add the num of shuffle sequences.
-            # examples[3].append(decode_masks) # add the num of shuffle sequences.
-            # examples[4].append(labels) # add the num of shuffle sequences.
-            # examples[5].append(target) # add the num of shuffle sequences.
+
             example = [encode_inputs,encode_masks,decode_inputs,decode_masks,labels,target]
             example = [torch.tensor(t,dtype=torch.int32) for t in example]
             # --------------------------------------------- format of pre_order ---------------------------------------------
@@ -128,9 +136,14 @@ class bart_dataset(Dataset):
                     encode_input +=  raw_event_list[i] + ' <sep> '
                 else:
                     encode_input +=  raw_event_list[i]
+
             decode_input = ''
-            for i in mask_indexs:
-                decode_input += raw_event_list[i] + ' <sep> '
+            # decode恢复所有的
+            for i in range(9):
+                decode_input +=  raw_event_list[i] + ' <sep> '
+            # # decode恢复mask掉的   
+            # for i in mask_indexs:
+            #     decode_input += raw_event_list[i] + ' <sep> '
             decode_input = decode_input[:-1]
 
 
@@ -157,8 +170,48 @@ class bart_dataset(Dataset):
             example_original = [torch.tensor(t,dtype=torch.int32) for t in example_original]
          
             # --------------------------------------------- format of orginial event-centric ---------------------------------------------
-            return example, example_original
+            
+            # --------------------------------------------- format of normal order ---------------------------------------------
+            events_raw_position = [i for i in range(len(raw_event_list))]
+            encode_input_2 = ''
+            for index, i in enumerate(events_raw_position):
+                if index == len(events_raw_position) - 1 :
+                    encode_input_2 +=  raw_event_list[i]
+                else:
+                    encode_input_2 +=  raw_event_list[i] + ' <sep> '
 
+            decode_input_2 = ''
+            for index, i in enumerate(events_raw_position):
+                if index == len(events_raw_position) - 1:
+                    decode_input_2 +=  raw_event_list[i]
+                else:
+                    decode_input_2 +=  raw_event_list[i] + ' <sep> '
+            encode_input_2_tokenized = self.tokenizer(encode_input_2,
+                                    add_special_tokens=True,
+                                    return_token_type_ids=False,
+                                    padding="max_length",
+                                    truncation=True,
+                                    max_length=self.args.encode_max_length)
+            decode_input_2_tokenized = self.tokenizer(decode_input_2,
+                                    add_special_tokens=True,
+                                    return_token_type_ids=False,
+                                    padding="max_length",
+                                    truncation=True,
+                                    max_length=self.args.decode_max_length)
+            encode_inputs_2 = encode_input_2_tokenized['input_ids']
+            encode_masks_2 = encode_input_2_tokenized['attention_mask'] 
+            decode_inputs_2 = decode_input_2_tokenized['input_ids']
+            decode_masks_2 = decode_input_2_tokenized['attention_mask']
+            labels_2 = copy.deepcopy(decode_inputs_2)
+            example_normal = [encode_inputs_2,encode_masks_2,decode_inputs_2,decode_masks_2,labels_2,target]
+            example_normal = [torch.tensor(t,dtype=torch.int32) for t in example_normal]
+            # --------------------------------------------- format of normal order --------------------------------------------- 
+            
+            
+
+            
+            
+            return example, example_original, example_normal
 
 
 
@@ -280,4 +333,43 @@ class bart_dataset(Dataset):
             example_original = [encode_inputs,encode_masks,decode_inputs,decode_masks,labels,target]
             example_original = [torch.tensor(t,dtype=torch.int32) for t in example_original]
 
-            return example, example_original
+
+
+            # --------------------------------------------- format of normal order ---------------------------------------------
+            events_raw_position = [i for i in range(len(raw_event_list))]
+            encode_input_2 = ''
+            for index, i in enumerate(events_raw_position):
+                if index == len(events_raw_position) - 1 :
+                    encode_input_2 +=  raw_event_list[i]
+                else:
+                    encode_input_2 +=  raw_event_list[i] + ' <sep> '
+
+            decode_input_2 = ''
+            for index, i in enumerate(events_raw_position):
+                if index == len(events_raw_position) - 1:
+                    decode_input_2 +=  raw_event_list[i]
+                else:
+                    decode_input_2 +=  raw_event_list[i] + ' <sep> '
+            encode_input_2_tokenized = self.tokenizer(encode_input_2,
+                                    add_special_tokens=True,
+                                    return_token_type_ids=False,
+                                    padding="max_length",
+                                    truncation=True,
+                                    max_length=self.args.encode_max_length)
+            decode_input_2_tokenized = self.tokenizer(decode_input_2,
+                                    add_special_tokens=True,
+                                    return_token_type_ids=False,
+                                    padding="max_length",
+                                    truncation=True,
+                                    max_length=self.args.decode_max_length)
+            encode_inputs_2 = encode_input_2_tokenized['input_ids']
+            encode_masks_2 = encode_input_2_tokenized['attention_mask'] 
+            decode_inputs_2 = decode_input_2_tokenized['input_ids']
+            decode_masks_2 = decode_input_2_tokenized['attention_mask']
+            labels_2 = copy.deepcopy(decode_inputs_2)
+            example_normal = [encode_inputs_2,encode_masks_2,decode_inputs_2,decode_masks_2,labels_2,target]
+            example_normal = [torch.tensor(t,dtype=torch.int32) for t in example_normal]
+            # --------------------------------------------- format of normal order --------------------------------------------- 
+
+
+            return example, example_original, example_normal

@@ -1,14 +1,14 @@
 # train
 config = {
     "debug": "False",
-    "annotation": 'only original | pre_order=False, contrastive fine-tuning | pre_train=False, margin=0.5, train_batch = 32',
+    "annotation": 'position loss + original loss | pre_order=True, contrast_learning -> pre_train=False, margin=0.5, train_batch = 128',
 
     # gpu-related 
-    "gpuid": "0,1",
-    "use_gpu": True,
     "multi-gpu": True,
+    "gpuid": "0,1,2",
+    "gpu_num": 3,
+    "use_gpu": True,
     "local_rank": -1,
-    "gpu_num": 1,
 
     # dataset-related
     "data_dir": "../data/negg_data",
@@ -21,10 +21,13 @@ config = {
 
 
     # model parameter
-    "pred_order": False, # new add 
+    "event_position_mask_num" : 3,
+    "pred_order": True, # new add 
     "pretrain": False, # event-centric set to True, contrastive_fine-tuning set to False.
     # "checkpoint" : "/sdc/wwc/mcnc-main/cache/checkpoints/03-28/2023-03-28_14:17:41_original | pre_order=False, event-centric | pre_train=True, margin=0.4, train_batch = 128/best_checkpoint.pt", # event-centric set to True, contrastive_fine-tuning set to False.
-    "checkpoint" : "/sdc/wwc/mcnc-main/cache/checkpoints/03-29/2023-03-29_13:21:07_only original | pre_order=False, event-centric | pre_train=True, margin=0.5, train_batch = 128/best_checkpoint.pt",
+    # "checkpoint" : "/sdc/wwc/mcnc-main/cache/checkpoints/03-29/2023-03-29_13:21:07_only original | pre_order=False, event-centric | pre_train=True, margin=0.5, train_batch = 128/best_checkpoint.pt",
+    # "checkpoint" : "/sdc/wwc/mcnc-main/cache/checkpoints/04-17/2023-04-17_15:08:29_position loss + original loss | pre_order=True, event-centric -> pre_train=True, margin=0.5, train_batch = 128/best_checkpoint.pt",
+    "checkpoint": "/sdc/wwc/mcnc-main/cache/checkpoints/04-25/2023-04-25_16:48:30_position loss + original loss | pre_order=True, contrast_learning -> pre_train=False, margin=0.5, train_batch = 128/best_checkpoint.pt",
     "resume": True, # event-centric set to True, contrastive_fine-tuning set to False.
     "dynamic_weight": False, # new add 
     "beta" : 1,
@@ -39,7 +42,7 @@ config = {
     "vocab_size": 50265,
 
     # training hyper parameter
-    "seed": 970106,
+    "seed": 971112,
     "per_gpu_train_batch_size": 32, 
     "max_train_steps": 0,
     "eval_batch_size": 64,

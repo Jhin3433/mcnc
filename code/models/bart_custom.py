@@ -1,12 +1,13 @@
 from sre_constants import RANGE
 from torch import nn
-from transformers.models.bart.modeling_bart import BartForConditionalGeneration,BartLearnedPositionalEmbedding
+from models.my_modeling_bart import BartForConditionalGeneration,BartLearnedPositionalEmbedding
 from transformers.modeling_outputs import Seq2SeqLMOutput
 from models.base.cot import ComplementEntropy
 from torch.nn import CrossEntropyLoss
 import torch
 from transformers import BartTokenizer
 import logging
+
 logger = logging.getLogger()
 
 
@@ -17,10 +18,8 @@ class bart_mask_random(nn.Module):
     def __init__(self, args):
         super(bart_mask_random, self).__init__()
 
-        
         self.mlm = BartForConditionalGeneration.from_pretrained(args.pretrained_model_path)
         self.mlm_original = BartForConditionalGeneration.from_pretrained(args.pretrained_model_path)
-
         self.tokenizer = BartTokenizer.from_pretrained(args.pretrained_model_path)
 
         # add <sep> tokens
@@ -31,8 +30,8 @@ class bart_mask_random(nn.Module):
 
 
         # set encoders of two mlm as the same.
-        self.mlm_original.model.encoder = self.mlm.model.encoder
-
+        # self.mlm_original.model.encoder = self.mlm.model.encoder
+        del self.mlm_original
 
         self.args = args
         self.config = self.mlm.config
@@ -139,7 +138,12 @@ class bart_mask_random(nn.Module):
         shift_labels = labels[..., 1:].contiguous() # [batch, 49]
         loss_fct = CrossEntropyLoss()
         loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
-        return loss, None, None
+
+        # logits for contrast learning
+        loss_fct_2 = CrossEntropyLoss(reduction='none')
+        logits = loss_fct_2(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1)) #[batch, 49]
+
+        return loss, logits.reshape(batch_size, -1), None
     
 
 
@@ -269,14 +273,33 @@ class bart_mask_random(nn.Module):
         return None,logits,None
 
     def forward(
-        self, pre_order_inputs, original_inputs
+        self, pre_order_inputs, original_inputs, normal_inputs
     ):
         
         if self.args.pretrain and self.training: #event-centric training
-            pre_order_loss, _, _ = self.event_centric_stage(pre_order_inputs, self.mlm)
-            original_loss, _, _ = self.event_centric_stage(original_inputs, self.mlm_original)
-            all_loss = pre_order_loss + original_loss
-            # all_loss = original_loss 
+            # pre_order_loss, pre_order_logits, _ = self.event_centric_stage(pre_order_inputs, self.mlm)
+            # original_loss, original_logits, _ = self.event_centric_stage(original_inputs, self.mlm)
+            # # original_loss, original_logits, _ = self.event_centric_stage(original_inputs, self.mlm_original)
+            
+            normal_loss, normal_logits, _ = self.event_centric_stage(normal_inputs, self.mlm)
+
+            # cos = torch.einsum('nc,ck->nk', [normal_logits, pre_order_logits.T]) / 1
+            # cos_2 = torch.einsum('nc,ck->nk', [normal_logits, original_logits.T]) / 1
+            # cos = torch.cat((cos, cos_2), dim=0)
+
+         
+            # contrast_learning_label = torch.cat((torch.arange(cos_2.size(0)).to(self.args.device), torch.arange(cos_2.size(0)).long().to(self.args.device)), dim=0)
+            # contrast_learning_loss_fct = nn.CrossEntropyLoss() 
+            # contrast_learning_loss = contrast_learning_loss_fct(cos, contrast_learning_label) 
+
+
+            # mask = torch.ones(cos_2.shape[0]).to(self.args.device) #[batch_size]个1
+            # mask = torch.diag_embed(mask)
+            # pos = cos.masked_select(mask.bool())
+            # neg = cos.masked_select((1 - mask).bool())
+
+            all_loss = normal_loss
+            # all_loss = original_loss + pre_order_loss + normal_loss + contrast_learning_loss
             return all_loss, None, None
     
         elif self.args.pretrain==False and self.training: #contrasitve fine-tuning

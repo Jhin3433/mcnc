@@ -1,10 +1,10 @@
 # eval 
 config = {
-    "debug": "False",
-    "annotation": 'all loss and logits, pre_train==False, modify max_length_to_50., lr:1.0-6',
+    "debug": "True",
+    "annotation": 'test on testdataset',
 
     # gpu-related 
-    "gpuid": "0",
+    "gpuid": "2",
     "use_gpu": True,
     "multi-gpu": False,
     "local_rank": -1,
@@ -17,16 +17,16 @@ config = {
     "eval_decode_max_length": 50,
     "truncation": True,
     "random_span": False,
+    "mask_num": 3,
 
 
     # model parameter
+    "event_position_mask_num" : 3,
     "pred_order": True, # new add 
     "pretrain": False, #event-centric set to True, contrastive_fine-tuning set to False.
-    # "checkpoint" : "/sdc/wwc/mcnc-main/cache/checkpoints/03-20/2023-03-20_17:02:33_all loss and logits, pre_train==True, modify max_length_to_50., lr:1.0-5, the input is nine shuffled events, the output is ordered events./best_checkpoint.pt", # event-centric set to True, contrastive_fine-tuning set to False.
-    # only mask original checkpoint
-    # "checkpoint" : "/sdc/wwc/mcnc-main/cache/checkpoints/02-16/2023-02-16_15:35:02_bart_base_contrastive_fine-tuning/best_checkpoint.pt", # event-centric set to True, contrastive_fine-tuning set to False.
-    # only pre_order checkpoint
-    "checkpoint" : "/sdc/wwc/mcnc-main/cache/checkpoints/03-10/2023-03-10_10:20:19_bart, contrastive_fine-tuning, modify max_length_to_50., lr:1.0-5, the input is nine shuffled events, the output is ordered events./best_checkpoint.pt", # event-centric set to True, contrastive_fine-tuning set to False.
+
+    "checkpoint" : "/sdc/wwc/mcnc-main/cache/checkpoints/04-21/2023-04-21_15:35:26_position loss + original loss | pre_order=True, contrast_learning -> pre_train=False, margin=0.5, train_batch = 128/best_checkpoint.pt", # event-centric set to True, contrastive_fine-tuning set to False.
+    # "checkpoint" : "/sdc/wwc/mcnc-main/cache/checkpoints/03-28/2023-03-28_22:45:00_original | pre_order=False, contrastive fine-tuning | pre_train=False, margin=0.5, train_batch = 32, use 03-28_14:17:41.checkpoint/best_checkpoint.pt",
     "resume": True, # event-centric set to True, contrastive_fine-tuning set to False.
     "dynamic_weight": False, # new add 
     "beta" : 1,

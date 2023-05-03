@@ -44,6 +44,7 @@ def init_args(mode = "train"):
     parser.add_argument("--mask_num", type=int, default=config["mask_num"], help="mask_num.")
 
     # model parameter
+    parser.add_argument("--event_position_mask_num", type=int, default=config["event_position_mask_num"], help="mask_num for event position.")
     parser.add_argument("--pred_order", type=str2bool, default=config["pred_order"], help="pred_order or not.")
     parser.add_argument("--pretrain", type=str2bool, default=config["pretrain"], help="pretrain or not.")
     parser.add_argument("--checkpoint", type=str, default=config["checkpoint"], help="checkpoint")

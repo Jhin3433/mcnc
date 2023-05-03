@@ -22,6 +22,8 @@ class bart_mask_random(nn.Module):
         self.args = args
         self.config = self.mlm.config
 
+
+
     def forward(
         self, batch
     ):
