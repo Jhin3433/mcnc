@@ -165,7 +165,7 @@ if __name__ == '__main__':
     start_date = date.today().strftime('%m-%d')
     running_time = time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())
     # pre-ready
-    args = init_args(mode = "train") # eval
+    args = init_args(mode = "eval") # eval train
     logger = init_logger(args, start_date, running_time)
     args.device, args.local_rank = init_device(args)
     if args.local_rank in [-1,0]:

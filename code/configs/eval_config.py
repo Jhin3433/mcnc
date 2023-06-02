@@ -4,7 +4,7 @@ config = {
     "annotation": 'test on testdataset',
 
     # gpu-related 
-    "gpuid": "2",
+    "gpuid": "1",
     "use_gpu": True,
     "multi-gpu": False,
     "local_rank": -1,
@@ -25,7 +25,7 @@ config = {
     "pred_order": True, # new add 
     "pretrain": False, #event-centric set to True, contrastive_fine-tuning set to False.
 
-    "checkpoint" : "/sdc/wwc/mcnc-main/cache/checkpoints/04-21/2023-04-21_15:35:26_position loss + original loss | pre_order=True, contrast_learning -> pre_train=False, margin=0.5, train_batch = 128/best_checkpoint.pt", # event-centric set to True, contrastive_fine-tuning set to False.
+    "checkpoint": "/sdc/wwc/mcnc-main/cache/checkpoints/05-04/2023-05-04_09:30:01_original loss without position loss, token position_emb + event position_emb, dataset recover all events, contrast_learning -> pre_train=False, margin=0.5, train_batch = 32/best_checkpoint.pt",
     # "checkpoint" : "/sdc/wwc/mcnc-main/cache/checkpoints/03-28/2023-03-28_22:45:00_original | pre_order=False, contrastive fine-tuning | pre_train=False, margin=0.5, train_batch = 32, use 03-28_14:17:41.checkpoint/best_checkpoint.pt",
     "resume": True, # event-centric set to True, contrastive_fine-tuning set to False.
     "dynamic_weight": False, # new add 

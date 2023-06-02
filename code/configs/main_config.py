@@ -1,7 +1,7 @@
 # train
 config = {
     "debug": "False",
-    "annotation": 'position loss + original loss | pre_order=True, contrast_learning -> pre_train=False, margin=0.5, train_batch = 128',
+    "annotation": 'original loss without position loss, token position_emb + event position_emb, dataset recover all events, contrast_learning -> pre_train=False, margin=0.5, train_batch = 32',
 
     # gpu-related 
     "multi-gpu": True,
@@ -27,7 +27,9 @@ config = {
     # "checkpoint" : "/sdc/wwc/mcnc-main/cache/checkpoints/03-28/2023-03-28_14:17:41_original | pre_order=False, event-centric | pre_train=True, margin=0.4, train_batch = 128/best_checkpoint.pt", # event-centric set to True, contrastive_fine-tuning set to False.
     # "checkpoint" : "/sdc/wwc/mcnc-main/cache/checkpoints/03-29/2023-03-29_13:21:07_only original | pre_order=False, event-centric | pre_train=True, margin=0.5, train_batch = 128/best_checkpoint.pt",
     # "checkpoint" : "/sdc/wwc/mcnc-main/cache/checkpoints/04-17/2023-04-17_15:08:29_position loss + original loss | pre_order=True, event-centric -> pre_train=True, margin=0.5, train_batch = 128/best_checkpoint.pt",
-    "checkpoint": "/sdc/wwc/mcnc-main/cache/checkpoints/04-25/2023-04-25_16:48:30_position loss + original loss | pre_order=True, contrast_learning -> pre_train=False, margin=0.5, train_batch = 128/best_checkpoint.pt",
+    # "checkpoint": "/sdc/wwc/mcnc-main/cache/checkpoints/04-25/2023-04-25_16:48:30_position loss + original loss | pre_order=True, contrast_learning -> pre_train=False, margin=0.5, train_batch = 128/best_checkpoint.pt",
+    # "checkpoint": "/sdc/wwc/mcnc-main/cache/checkpoints/05-03/2023-05-03_20:43:36_original loss without position loss, token position_emb + event position_emb, dataset recover all events, event-centric-> pre_train=True, margin=0.5, train_batch = 128/best_checkpoint.pt",
+    "checkpoint": "/sdc/wwc/mcnc-main/cache/checkpoints/05-03/2023-05-03_23:34:43_original loss without position loss, token position_emb + event position_emb, dataset recover all events, contrast_learning -> pre_train=False, margin=0.5, train_batch = 32/best_checkpoint.pt",
     "resume": True, # event-centric set to True, contrastive_fine-tuning set to False.
     "dynamic_weight": False, # new add 
     "beta" : 1,

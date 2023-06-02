@@ -1,13 +1,13 @@
 import pickle
 import torch
 import numpy as np
-file = open("04_21_15_35_26.pickle", "rb")
+file = open("03_10_10_20_19_pre_order_results.pickle", "rb")
 a = pickle.load(file) #pred logits 
-b = pickle.load(file)
+b = pickle.load(file) # [1 if pred == label else 0 for pred,label in zip(b,c)].count(1)
 c = pickle.load(file)
 
 
-file2 = open("03_28_22_45_00.pickle", "rb") # eval_config.py set pre_order == False
+file2 = open("02_16_15_35_02_original_results.pickle", "rb") # eval_config.py set pre_order == False
 d = pickle.load(file2) #pred logits 
 e = pickle.load(file2)
 f = pickle.load(file2)

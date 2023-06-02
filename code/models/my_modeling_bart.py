@@ -709,55 +709,21 @@ class BartEncoder(BartPretrainedModel):
             inputs_embeds = self.embed_tokens(input_ids) * self.embed_scale #[batch, length, emb_size]
 
 
-
-        # text_spans_start = text_spans[:, 0:-1: 2]
         # bsz, seq_len = input_shape[:2]
-        # event_positions = [[0 for _ in range(seq_len)] for b in range(bsz)]
-        # for bt in range(bsz):
-        #     input_id = input_ids[bt]
-        #     # mask position
-        #     mask_num = random.randint(1,self.event_position_mask_num)
-        #     position_mask_indexs = random.sample(range(0, 9),mask_num)
-        #     for index in range(seq_len):
-        #         id = input_id[index]
-        #         if id == 0:
-        #             event_positions[bt][index] = 0    # <s> 对应的event postion id
-        #         elif id == 1:
-        #             event_positions[bt][index] = 1    # <pad>
-        #         elif id == 2:
-        #             event_positions[bt][index] = 2    # </s>
-        #         # elif id == 50264:
-        #         #     event_positions[index] = 3    # <mask>
-        #         elif id == 50265:
-        #             event_positions[bt][index] = 3    # <sep>
-        #             # 4 is id of postion <mask>
-        #         else:
-        #             if index in text_spans_start[bt]:
-        #                 temp_index = int(((text_spans[bt] == index).nonzero(as_tuple=False))[0].item()) # [0]的作用是因为mask导致start end index相同
-        #                 end_index = text_spans[bt][ temp_index + 1 ].item()
-
-        #                 temp_index_2 = int(((text_spans_start[bt] == index).nonzero(as_tuple=False)).item()) #event的位置
-                        
-        #                 event_positions[bt][index:end_index + 1] = [temp_index_2 + 5 if temp_index_2 not in position_mask_indexs else 4 for i in range(end_index + 1 - index)] # 4 是masked position
-        
-        
-
-        bsz, seq_len = input_shape[:2]
-        event_positions = torch.zeros((bsz, seq_len), dtype=torch.int64)
-        event_positions[input_ids == 0] = 0 # <s>
-        event_positions[input_ids == 1] = 1 # <pad>
-        event_positions[input_ids == 2] = 2 # </s>
-        event_positions[input_ids == 50265] = 3
-        event_positions = event_positions.index_put(construction_event_position_matrix[0], construction_event_position_matrix[1]) 
-        # for current_position in range(pre_defined_max_position):
-        #     text_spans[:, 2 * current_position: 2 * current_position + 2]
+        # event_positions = torch.zeros((bsz, seq_len), dtype=torch.int64)
+        # event_positions[input_ids == 0] = 0 # <s>
+        # event_positions[input_ids == 1] = 1 # <pad>
+        # event_positions[input_ids == 2] = 2 # </s>
+        # event_positions[input_ids == 50265] = 3
+        # event_positions = event_positions.index_put(construction_event_position_matrix[0], construction_event_position_matrix[1]) 
+        # embed_event_pos = self.embed_event_positions(event_positions.cuda())
 
 
 
-        embed_event_pos = self.embed_event_positions(event_positions.cuda())
+
+
         embed_pos = self.embed_positions(input_shape)
-
-        hidden_states = inputs_embeds + embed_pos + embed_event_pos # add event position embedding
+        hidden_states = inputs_embeds + embed_pos # + embed_event_pos # add event position embedding
         hidden_states = self.layernorm_embedding(hidden_states)
         hidden_states = F.dropout(hidden_states, p=self.dropout, training=self.training)
 
