@@ -1,19 +1,31 @@
+
 # train
 config = {
     "debug": "False",
-    "annotation": 'original loss without position loss, token position_emb + event position_emb, dataset recover all events, contrast_learning -> pre_train=False, margin=0.5, train_batch = 32',
-
+    # "annotation": 'modify D and P, kernalsize=3&5&merge, contrastive-fine-tuning, original method, use . as the seprator, use the calculation of alignment distance, remove the limitation of the seq_length',
+    "annotation": "add alignment when contrastive fine-tuning",
     # gpu-related 
-    "multi-gpu": True,
-    "gpuid": "0,1,2",
-    "gpu_num": 3,
+    "multi-gpu": False,
+    "gpuid": "1", #同时修改run.sh中节点数
+    "gpu_num": 1,
     "use_gpu": True,
     "local_rank": -1,
+
+
+    # # 记得改batch_size
+    # "debug": "True",
+    # "annotation": 'original',
+    # # gpu-related 
+    # "multi-gpu": False,
+    # "gpuid": "1",
+    # "gpu_num": 1,
+    # "use_gpu": True,
+    # "local_rank": -1,
 
     # dataset-related
     "data_dir": "../data/negg_data",
     "encode_max_length": 100,
-    "decode_max_length": 50,
+    "decode_max_length": 80,
     "eval_decode_max_length": 50,
     "truncation": True,
     "random_span": False,
@@ -21,30 +33,37 @@ config = {
 
 
     # model parameter
-    "event_position_mask_num" : 3,
-    "pred_order": True, # new add 
-    "pretrain": False, # event-centric set to True, contrastive_fine-tuning set to False.
+    "event_position_mask_num" : 3, # 后续待删除
+    "pretrain": True, # 用于让orignial code正常运行，后续待删除
+
+    
+    "custom": True, # new add 
+    "stage_mode": "contrastive-fine-tuning", # event-centric set to True, contrastive-fine-tuning set to False.
     # "checkpoint" : "/sdc/wwc/mcnc-main/cache/checkpoints/03-28/2023-03-28_14:17:41_original | pre_order=False, event-centric | pre_train=True, margin=0.4, train_batch = 128/best_checkpoint.pt", # event-centric set to True, contrastive_fine-tuning set to False.
     # "checkpoint" : "/sdc/wwc/mcnc-main/cache/checkpoints/03-29/2023-03-29_13:21:07_only original | pre_order=False, event-centric | pre_train=True, margin=0.5, train_batch = 128/best_checkpoint.pt",
     # "checkpoint" : "/sdc/wwc/mcnc-main/cache/checkpoints/04-17/2023-04-17_15:08:29_position loss + original loss | pre_order=True, event-centric -> pre_train=True, margin=0.5, train_batch = 128/best_checkpoint.pt",
     # "checkpoint": "/sdc/wwc/mcnc-main/cache/checkpoints/04-25/2023-04-25_16:48:30_position loss + original loss | pre_order=True, contrast_learning -> pre_train=False, margin=0.5, train_batch = 128/best_checkpoint.pt",
     # "checkpoint": "/sdc/wwc/mcnc-main/cache/checkpoints/05-03/2023-05-03_20:43:36_original loss without position loss, token position_emb + event position_emb, dataset recover all events, event-centric-> pre_train=True, margin=0.5, train_batch = 128/best_checkpoint.pt",
-    "checkpoint": "/sdc/wwc/mcnc-main/cache/checkpoints/05-03/2023-05-03_23:34:43_original loss without position loss, token position_emb + event position_emb, dataset recover all events, contrast_learning -> pre_train=False, margin=0.5, train_batch = 32/best_checkpoint.pt",
+    # "checkpoint": "/sdc/wwc/mcnc-main/cache/checkpoints/05-03/2023-05-03_23:34:43_original loss without position loss, token position_emb + event position_emb, dataset recover all events, contrast_learning -> pre_train=False, margin=0.5, train_batch = 32/best_checkpoint.pt",
+    # "checkpoint": "/sdc/wwc/mcnc-main/cache/checkpoints/03-28/2023-03-28_22:45:00_original | pre_order=False, contrastive fine-tuning | pre_train=False, margin=0.5, train_batch = 32, use 03-28_14:17:41.checkpoint/best_checkpoint.pt",
+    # "checkpoint": "/sdc/wwc/mcnc-main/cache/checkpoints/06-15/2023-06-15_10:13:59_original method, use <s> as the seprator, speed up the calculation of alignment distance./best_checkpoint.pt",
+    # "checkpoint": "/sdc/wwc/mcnc-main/cache/checkpoints/03-28/2023-03-28_22:45:00_original | pre_order=False, contrastive fine-tuning | pre_train=False, margin=0.5, train_batch = 32, use 03-28_14:17:41.checkpoint/best_checkpoint.pt",
+    "checkpoint": "/sdc/wwc/mcnc-main/cache/checkpoints/06-24/2023-06-24_22:32:29_only contrastive fine-tuning/best_checkpoint.pt",
     "resume": True, # event-centric set to True, contrastive_fine-tuning set to False.
-    "dynamic_weight": False, # new add 
+    "dynamic_weight": False, # new add  # 后续待删除
     "beta" : 1,
     "loss_fct": "ComplementEntropy", # CrossEntropyLoss MarginRankingLoss 
     "model_type": "bart_mask_random",
     "pretrained_model_path": "../init/init_model/bart-base",
     "pro_type" : "sqrt",
     "softmax": True,
-    "margin": 0.5,
+    "margin": 0.4,
     "noise_lambda": 0,
     "denominator_correction_factor" : 0,
     "vocab_size": 50265,
 
     # training hyper parameter
-    "seed": 971112,
+    "seed": 42,
     "per_gpu_train_batch_size": 32, 
     "max_train_steps": 0,
     "eval_batch_size": 64,
@@ -57,11 +76,10 @@ config = {
     "patience": 5,
     "log_step": 10,
 
-    "lr": 1.0e-5, #learning rate 2e-6
+    "lr": 1e-6, #learning rate 2e-6
     "lr_scheduler_type": "constant", # constant cosine
     "weight_decay": 1.0e-6,  # 1.0e-6 #1e-2
-    "epsilon": 1.0e-8,
-    
+    "epsilon": 1.0e-8
 }
 
 

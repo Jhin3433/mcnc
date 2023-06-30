@@ -182,4 +182,4 @@ class bart_mask_random(nn.Module):
             #     print(targets[0].item())
             #     print()
             
-            return None,logits,None
+            return outputs.encoder_last_hidden_state,logits,None

@@ -637,9 +637,6 @@ class BartEncoder(BartPretrainedModel):
             self.padding_idx,
         )
 
-        # event position embedding
-        self.embed_event_positions = nn.Embedding(14, embed_dim, self.padding_idx)
-
 
         self.layers = nn.ModuleList([BartEncoderLayer(config) for _ in range(config.encoder_layers)])
         self.layernorm_embedding = nn.LayerNorm(embed_dim)
@@ -653,9 +650,7 @@ class BartEncoder(BartPretrainedModel):
         inputs_embeds=None,
         output_attentions=None,
         output_hidden_states=None,
-        return_dict=None,
-        text_spans=None,
-        construction_event_position_matrix=None
+        return_dict=None
     ):
         r"""
         Args:
@@ -709,18 +704,6 @@ class BartEncoder(BartPretrainedModel):
             inputs_embeds = self.embed_tokens(input_ids) * self.embed_scale #[batch, length, emb_size]
 
 
-        # bsz, seq_len = input_shape[:2]
-        # event_positions = torch.zeros((bsz, seq_len), dtype=torch.int64)
-        # event_positions[input_ids == 0] = 0 # <s>
-        # event_positions[input_ids == 1] = 1 # <pad>
-        # event_positions[input_ids == 2] = 2 # </s>
-        # event_positions[input_ids == 50265] = 3
-        # event_positions = event_positions.index_put(construction_event_position_matrix[0], construction_event_position_matrix[1]) 
-        # embed_event_pos = self.embed_event_positions(event_positions.cuda())
-
-
-
-
 
         embed_pos = self.embed_positions(input_shape)
         hidden_states = inputs_embeds + embed_pos # + embed_event_pos # add event position embedding
@@ -768,6 +751,8 @@ class BartEncoder(BartPretrainedModel):
 
         if not return_dict: 
             return tuple(v for v in [hidden_states, encoder_states, all_attentions] if v is not None)
+
+
         return BaseModelOutput(
             last_hidden_state=hidden_states, hidden_states=encoder_states, attentions=all_attentions
         )
@@ -890,7 +875,7 @@ class BartDecoder(BartPretrainedModel):
         past_key_values_length = past_key_values[0][0].shape[2] if past_key_values is not None else 0
 
         if inputs_embeds is None:
-            inputs_embeds = self.embed_tokens(input_ids) * self.embed_scale
+            inputs_embeds = self.embed_tokens(input_ids) * self.embed_scale #[batch_size(choice_num), decode_length, dim]
 
         # create causal mask
         # [bsz, seq_len] -> [bsz, 1, tgt_seq_len, src_seq_len]
@@ -909,7 +894,8 @@ class BartDecoder(BartPretrainedModel):
         # expand encoder attention mask
         if encoder_hidden_states is not None and encoder_attention_mask is not None:
             # [bsz, seq_len] -> [bsz, 1, tgt_seq_len, src_seq_len]
-            encoder_attention_mask = _expand_mask(encoder_attention_mask, inputs_embeds.dtype, tgt_len=input_shape[-1])
+            encoder_attention_mask = _expand_mask(encoder_attention_mask, inputs_embeds.dtype, tgt_len=input_shape[-1]) #encoder_attention_mask[0][0][1] == encoder_attention_mask[0][0][8] 
+
 
         # embed positions
         positions = self.embed_positions(input_shape, past_key_values_length)
@@ -1050,8 +1036,7 @@ class BartModel(BartPretrainedModel):
         output_attentions=None,
         output_hidden_states=None,
         return_dict=None,
-        text_spans=None,
-        construction_event_position_matrix=None
+        encode_event_spans=None 
     ):
 
         # different to other models, Bart automatically creates decoder_input_ids from
@@ -1076,8 +1061,6 @@ class BartModel(BartPretrainedModel):
                 output_attentions=output_attentions,
                 output_hidden_states=output_hidden_states,
                 return_dict=return_dict,
-                text_spans=text_spans,
-                construction_event_position_matrix=construction_event_position_matrix
             )
         # If the user passed a tuple for encoder_outputs, we wrap it in a BaseModelOutput when return_dict=True
         elif return_dict and not isinstance(encoder_outputs, BaseModelOutput):
@@ -1086,6 +1069,31 @@ class BartModel(BartPretrainedModel):
                 hidden_states=encoder_outputs[1] if len(encoder_outputs) > 1 else None,
                 attentions=encoder_outputs[2] if len(encoder_outputs) > 2 else None,
             )
+
+
+        if encode_event_spans != None:
+            # 返回9个event对应的logits
+            #encode_event_spans : [batch, choice_num, 9, encode_length, 768]
+            # !!!!!!!repeat 是否可以换成expand
+            all_events_emb = torch.sum(
+                torch.mul(encoder_outputs[0].repeat(1,encode_event_spans.shape[-3],1).view(-1, encode_event_spans.shape[-3], encoder_outputs[0].shape[1], encoder_outputs[0].shape[2]),
+                        encode_event_spans.view(encoder_outputs[0].shape[0], encode_event_spans.shape[-3], encoder_outputs[0].shape[1], encoder_outputs[0].shape[2])), dim=-2) / torch.count_nonzero(torch.sum(encode_event_spans.view(encoder_outputs[0].shape[0], encode_event_spans.shape[-3], encoder_outputs[0].shape[1], encoder_outputs[0].shape[2]), dim=-1), dim=-1).unsqueeze(-1).repeat(1,1,768)
+
+        else:
+            all_events_emb = None
+            # 未优化版
+            # all_events_emb_2 = None
+            # for i in range(encode_event_spans.shape[2]): 
+            #     encode_event_span = encode_event_spans.view(encoder_outputs[0].shape[0], encode_event_spans.shape[2], encoder_outputs[0].shape[1], encoder_outputs[0].shape[2])[:,i,:] #[batch*choice_num, encode_length, 768]
+            #     one_event_emb = torch.sum(torch.mul(encoder_outputs[0], encode_event_span), dim=-2) / torch.count_nonzero(torch.sum(encode_event_span, dim=-1),dim=1).unsqueeze(1).repeat(1, 768)
+
+            #     if all_events_emb_2 == None:
+            #         all_events_emb_2 = one_event_emb #[batch(*choice_num), 768]
+            #     else:
+            #         all_events_emb_2 = torch.cat((all_events_emb_2, one_event_emb),dim=-1) # [batch(*choice_num), 9*768]
+            # all_events_emb_2 = all_events_emb_2.reshape(encoder_outputs[0].shape[0], encode_event_spans.shape[2], encoder_outputs[0].shape[2]) #encode_event_spans.shape[2] = 9  [batch*choice_num, 9, 768]
+            # 用于验证: torch.sum( encoder_outputs[0][0] * encode_event_spans.view(-1,9,100,768)[0][2], dim=-2 ) /3 == all_events_emb_1[0][2]
+
 
         # decoder outputs consists of (dec_features, past_key_value, dec_hidden, dec_attn)
         decoder_outputs = self.decoder(
@@ -1112,7 +1120,8 @@ class BartModel(BartPretrainedModel):
             cross_attentions=decoder_outputs.cross_attentions, # None
             encoder_last_hidden_state=encoder_outputs.last_hidden_state,
             encoder_hidden_states=encoder_outputs.hidden_states,
-            encoder_attentions=encoder_outputs.attentions, # None
+            # encoder_attentions=encoder_outputs.attentions, # None
+            encoder_attentions=all_events_emb if all_events_emb != None else None #替换得上面一行
         )
 
 
@@ -1141,7 +1150,6 @@ class BartForConditionalGeneration(BartPretrainedModel):
         self.register_buffer("final_logits_bias", torch.zeros((1, self.model.shared.num_embeddings)))
         self.lm_head = nn.Linear(config.d_model, self.model.shared.num_embeddings, bias=False)
 
-        self.lm_head_for_event_position = nn.Linear(config.d_model, self.model.encoder.embed_event_positions.num_embeddings, bias=False)
         self.init_weights()
 
     def get_encoder(self):
@@ -1188,8 +1196,7 @@ class BartForConditionalGeneration(BartPretrainedModel):
         output_attentions=None,
         output_hidden_states=None,
         return_dict=None,
-        text_spans=None,
-        construction_event_position_matrix=None
+        encode_event_spans=None
     ):
         r"""
         labels (:obj:`torch.LongTensor` of shape :obj:`(batch_size, sequence_length)`, `optional`):
@@ -1220,12 +1227,9 @@ class BartForConditionalGeneration(BartPretrainedModel):
             output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
-            text_spans=text_spans,
-            construction_event_position_matrix=construction_event_position_matrix
+            encode_event_spans=encode_event_spans
         )
         lm_logits = self.lm_head(outputs[0]) + self.final_logits_bias
-
-        lm_position_logits = self.lm_head_for_event_position(outputs[0])
 
 
         masked_lm_loss = None
@@ -1239,7 +1243,7 @@ class BartForConditionalGeneration(BartPretrainedModel):
 
         return Seq2SeqLMOutput(
             loss=masked_lm_loss,
-            logits=(lm_logits,lm_position_logits), 
+            logits=lm_logits, 
             past_key_values=outputs.past_key_values,
             decoder_hidden_states=outputs.decoder_hidden_states,
             decoder_attentions=outputs.decoder_attentions,

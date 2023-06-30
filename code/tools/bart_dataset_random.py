@@ -199,10 +199,10 @@ class bart_dataset(Dataset):
                 # decode_input = '. ' + encode_input.strip('<mask> . ') + ". " + self.event2str(answer)[1:] + ' .'
 
                 ## decode恢复mask掉的
-                decode_input = '. ' + self.event2str(answer)[1:] + ' .'
+                decode_input = '. ' + self.event2str(answer)[1:] + ' .'   #  + " " + self.event2str(answer)[1:] + ' .' + " " + self.event2str(answer)[1:] + ' .'
 
                 if decode_input == '. city categorize links .':
-                    decode_input = '. city city city .'
+                    decode_input = '. city city city .'          # + ' city city city .' + ' city city city .'
                 # decode_input = self.event2str(answer)[1:]
                 decode_input_tokenized = self.tokenizer(decode_input,
                                         add_special_tokens=True,

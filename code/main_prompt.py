@@ -20,10 +20,10 @@ from torch.utils.tensorboard import SummaryWriter
 from transformers.models.bart.modeling_bart import BartForConditionalGeneration
 from apex import amp
 
-from utils import seed_everything
-from utils import init_args
-from utils import init_device
-from utils import init_logger
+from utils_prompt import seed_everything
+from utils_prompt import init_args
+from utils_prompt import init_device
+from utils_prompt import init_logger
 
 all_pred_labels = []
 all_pred_logits = []
@@ -59,23 +59,14 @@ def train(args,train_dataloader,model,optimizer,lr_scheduler,writer,logger=None,
                                                           output_device=args.local_rank,
                                                           find_unused_parameters=True)
     model.zero_grad()
-    for step, return_batch in enumerate(train_dataloader):
+    for step, batch in enumerate(train_dataloader):
         model.train()
-        if len(return_batch) == 3: 
-            (batch,batch_original,batch_noraml) = return_batch
-            batch = [t.long() for t in batch]
-            batch = tuple(t.to(args.device) for t in batch)
-            batch_original = [t.long() for t in batch_original]
-            batch_original = tuple(t.to(args.device) for t in batch_original)
-            batch_noraml = [t.long() for t in batch_noraml]
-            batch_noraml = tuple(t.to(args.device) for t in batch_noraml)   
-            output = model(batch, batch_original, batch_noraml)
-        else: # remain the original code.
-            batch_original = return_batch
-            batch_original = [t.long() for t in batch_original]
-            batch_original = tuple(t.to(args.device) for t in batch_original)
-            output = model(batch_original)
-        loss, logits, labels = output
+        batch = [t.long() for t in batch]
+        batch = tuple(t.to(args.device) for t in batch)
+        output = model(batch)
+        loss, logits, labels = output #align_loss
+ 
+
         if args.gradient_accumulation_steps > 1:
             loss = loss / args.gradient_accumulation_steps
         
@@ -85,10 +76,12 @@ def train(args,train_dataloader,model,optimizer,lr_scheduler,writer,logger=None,
         else:
             loss.backward()
         loss = loss.item()
+
+
         # record avg_loss and avg_cc.
         avg_loss.append(loss)
         if labels is None :
-            labels =  batch_original[-1]
+            labels =  batch[-1]
         acc = class_acc(logits, labels) if logits!=None else 0 #the return value of logits event-centric training is none, so Train_Acc:0.0000 Train_Avg_acc:0.0000  
         avg_acc.append(acc)
         # update the model.
@@ -165,7 +158,7 @@ if __name__ == '__main__':
     start_date = date.today().strftime('%m-%d')
     running_time = time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())
     # pre-ready
-    args = init_args(mode = "eval") # eval train
+    args = init_args(mode = "train") # eval train
     logger = init_logger(args, start_date, running_time)
     args.device, args.local_rank = init_device(args)
     if args.local_rank in [-1,0]:
@@ -176,9 +169,11 @@ if __name__ == '__main__':
     seed_everything(args.seed)
     
 
-    if args.pred_order:
-        from tools.position_bart_dataset import bart_dataset
-        from models.position_bart import bart_mask_random
+    if args.custom:
+        from tools.prompt_bart_dataset import bart_dataset
+        from models.prompt_bart import bart_mask_random
+
+
         MODEL_CLASSES = {
             'bart_1cls': bart_1cls,
             'bart_mask_random' : bart_mask_random,
@@ -240,6 +235,10 @@ if __name__ == '__main__':
                 "params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)],
                 "weight_decay": 0.0,
             },
+            # {
+            #     "params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)],
+            #     "weight_decay": 0.0,
+            # },
         ]
         #optimizer.load_state_dict(checkpoint['optimizer'])
         #optimizer_to(optimizer,args.device)  
@@ -302,11 +301,11 @@ if __name__ == '__main__':
             train_dataset = bart_dataset(train_raw_data,args,'train')
             train_sampler = RandomSampler(train_dataset) if args.local_rank == -1 else DistributedSampler(train_dataset)
             if args.debug: # set num_workers to 1 when I'm debuging.
-                train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.per_gpu_train_batch_size,num_workers=1)
+                train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.per_gpu_train_batch_size)
             else:
                 train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.per_gpu_train_batch_size,num_workers=8)
             torch.cuda.empty_cache()
-            torch.distributed.barrier()
+            # torch.distributed.barrier()
             train_loss, train_acc, global_step = train(args, train_dataloader,model,optimizer,lr_scheduler,writer,logger,global_step)
             if args.local_rank in [-1,0]:
                 logger.info('epoch={},avg_train_acc={},avg_loss={}'.format(epoch, train_acc, train_loss))
@@ -355,7 +354,4 @@ if __name__ == '__main__':
 
     # torch.distributed.barrier()
 
-
-# if __name__=='__main__':
-#     main()
 

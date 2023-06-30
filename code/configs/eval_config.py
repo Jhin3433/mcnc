@@ -4,7 +4,7 @@ config = {
     "annotation": 'test on testdataset',
 
     # gpu-related 
-    "gpuid": "1",
+    "gpuid": "0",
     "use_gpu": True,
     "multi-gpu": False,
     "local_rank": -1,
@@ -21,12 +21,16 @@ config = {
 
 
     # model parameter
-    "event_position_mask_num" : 3,
-    "pred_order": True, # new add 
-    "pretrain": False, #event-centric set to True, contrastive_fine-tuning set to False.
+    "event_position_mask_num" : 3,  # 后续待删除
+    "pretrain": False, # 后续待删除
 
-    "checkpoint": "/sdc/wwc/mcnc-main/cache/checkpoints/05-04/2023-05-04_09:30:01_original loss without position loss, token position_emb + event position_emb, dataset recover all events, contrast_learning -> pre_train=False, margin=0.5, train_batch = 32/best_checkpoint.pt",
+
+    "custom": True, # new add 
+    "stage_mode": "evaluate_model", #event-centric set to True, contrastive_fine-tuning set to False.
+    # "checkpoint": "/sdc/wwc/mcnc-main/cache/checkpoints/05-04/2023-05-04_09:30:01_original loss without position loss, token position_emb + event position_emb, dataset recover all events, contrast_learning -> pre_train=False, margin=0.5, train_batch = 32/best_checkpoint.pt",
     # "checkpoint" : "/sdc/wwc/mcnc-main/cache/checkpoints/03-28/2023-03-28_22:45:00_original | pre_order=False, contrastive fine-tuning | pre_train=False, margin=0.5, train_batch = 32, use 03-28_14:17:41.checkpoint/best_checkpoint.pt",
+    # "checkpoint": "/sdc/wwc/mcnc-main/cache/checkpoints/06-21/2023-06-21_16:12:32_kernalsize=3&5&merge, contrastive-fine-tuning, original method, use . as the seprator, use the calculation of alignment distance, remove the limitation of the seq_length/best_checkpoint.pt",
+    "checkpoint": "/sdc/wwc/mcnc-main/cache/checkpoints/06-23/2023-06-23_20:08:47_only event-centric/best_checkpoint.pt",
     "resume": True, # event-centric set to True, contrastive_fine-tuning set to False.
     "dynamic_weight": False, # new add 
     "beta" : 1,
@@ -41,7 +45,7 @@ config = {
     "vocab_size": 50265,
 
     # training hyper parameter
-    "seed": 970106,
+    "seed": 2022,
     "per_gpu_train_batch_size": 64, 
     "max_train_steps": 0,
     "eval_batch_size": 64,

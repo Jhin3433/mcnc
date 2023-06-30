@@ -7,7 +7,7 @@ time=$(date "+%Y-%m-%d_%H:%M:%S")
 
 
 
-nohup python -m torch.distributed.launch --nproc_per_node=3 main.py > contrast_${time}.log 2>&1 &
+nohup python -m torch.distributed.launch --nproc_per_node=2 main_align.py > contrast_${time}.log 2>&1 &
 # nohup python main.py > contrast_${time}.log 2>&1 &
 
 echo $! # output the pid of process. http://129.226.226.195/post/13717.html

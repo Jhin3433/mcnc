@@ -18,7 +18,7 @@ def init_args(mode = "train"):
             raise argparse.ArgumentTypeError('Boolean value expected.')
 
     if mode == "train":
-        from configs.main_config import config
+        from configs.main_config_prompt import config
     elif mode == "eval":
         from configs.eval_config import config
 
@@ -45,8 +45,9 @@ def init_args(mode = "train"):
 
     # model parameter
     parser.add_argument("--event_position_mask_num", type=int, default=config["event_position_mask_num"], help="mask_num for event position.")
-    parser.add_argument("--pred_order", type=str2bool, default=config["pred_order"], help="pred_order or not.")
-    parser.add_argument("--pretrain", type=str2bool, default=config["pretrain"], help="pretrain or not.")
+    parser.add_argument("--custom", type=str2bool, default=config["custom"], help="custom or not.")
+    parser.add_argument("--pretrain", type=str2bool, default=config["pretrain"], help="pretrain or not on eval mode.")
+    parser.add_argument("--stage_mode", type=str, default=config["stage_mode"], help="pretrain or not.")
     parser.add_argument("--checkpoint", type=str, default=config["checkpoint"], help="checkpoint")
     parser.add_argument("--resume", type=str2bool, default=config["resume"], help="resume or not.")
     parser.add_argument("--dynamic_weight", type=str2bool, default=config["dynamic_weight"], help="dynamic_weight or not.")
